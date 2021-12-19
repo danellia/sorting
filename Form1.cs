@@ -477,7 +477,7 @@ namespace sorting1
             double iter = 0;
             quickSort(0, quickArray.Length - 1);
             timer.Stop();
-            showTime(quickSortLabel, timer, iter * 0.7);
+            showTime(quickSortLabel, timer, iter * (1 - 1 / delay));
 
             void quickSort(int minIndex, int maxIndex)
             {
