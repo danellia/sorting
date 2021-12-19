@@ -18,7 +18,9 @@ namespace sorting1
         double[] bubbleArray, insertionArray, shakerArray, quickArray, bogoArray;
         Thread bubbleSortThread, insertionSortThread, shakerSortThread, quickSortThread, bogoSortThread;
         List<Thread> threadList = new List<Thread>();
+        List<Thread> threadListCurrent = new List<Thread>();
         bool isRunning = false;
+        int runningCount = 0;
         int delay = 100;
         Action refresh, time;
         public Form1()
@@ -94,6 +96,7 @@ namespace sorting1
                         MessageBox.Show("Файл пуст или не найден!");
                     }
                 });
+                clearAfterImport();
             }
             catch
             {
@@ -132,6 +135,7 @@ namespace sorting1
                     MessageBox.Show("Файл не выбран!");
                 }
             }
+            clearAfterImport();
         }
         private void randomToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -142,6 +146,7 @@ namespace sorting1
                 double value = random.Next(0, 500);
                 dataGridView.Rows.Add(value);
             }
+            clearAfterImport();
         }
         #endregion
         #region operate buttons
@@ -161,14 +166,7 @@ namespace sorting1
                     getData();
                     try
                     {
-                        if (delayTextBox.Text != "")
-                        {
-                            delay = Convert.ToInt32(delayTextBox.Text);
-                        }
-                        else
-                        {
-                            delayTextBox.Text = delay.ToString();
-                        }
+                        setDelay();
                         if (bubbleArray == null)
                         {
                             throw new Exception("Нужны данные для сортировки!");
@@ -255,6 +253,7 @@ namespace sorting1
                                 threadList.Add(bogoSortThread);
                                 bogoSortThread.Start();
                             }
+                            threadListCurrent = new List<Thread>(threadList);
                             isRunning = true;
                         }
                     }
@@ -269,11 +268,25 @@ namespace sorting1
                 }
                 else
                 {
-                    foreach (var thread in threadList)
+                    if (threadListCurrent.Count == 0)
                     {
-                        if (thread.ThreadState != System.Threading.ThreadState.Stopped)
+                        isRunning = false;
+                        threadList.Clear();
+                        threadListCurrent.Clear();
+                        startToolStripMenuItem_Click(sender, e);
+                    }
+                    else
+                    {
+                        foreach (var thread in threadList)
                         {
-                            thread.Resume();
+                            if (thread.ThreadState != System.Threading.ThreadState.Stopped)
+                            {
+                                thread.Resume();
+                            }
+                            else
+                            {
+                                threadListCurrent.Remove(thread);
+                            }
                         }
                     }
                 }
@@ -282,7 +295,6 @@ namespace sorting1
             {
                 MessageBox.Show("Ошибка! Нажмите Очистить!");
             }
-
         }
         private void stopToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -295,6 +307,11 @@ namespace sorting1
             }
         }
         private void clearToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            clearAfterImport();
+            dataGridView.Rows.Clear();
+        }
+        private void clearAfterImport()
         {
             foreach (var thread in threadList)
             {
@@ -310,10 +327,10 @@ namespace sorting1
             delayTextBox.Text = "";
             delay = 100;
             isRunning = false;
-            bubbleArray = new double[1]; 
-            shakerArray = new double[1]; 
-            quickArray = new double[1]; 
-            insertionArray = new double[1]; 
+            bubbleArray = new double[1];
+            shakerArray = new double[1];
+            quickArray = new double[1];
+            insertionArray = new double[1];
             bogoArray = new double[1];
             clearItemGroup(bubbleSortGraph, bubbleSortLabel, checkBoxBubbleSort);
             clearItemGroup(insertionSortGraph, insertionSortLabel, checkBoxInsertionSort);
@@ -322,7 +339,6 @@ namespace sorting1
             clearItemGroup(bogoSortGraph, bogoSortLabel, checkBoxBogoSort);
             uncheck(checkBoxAscending);
             uncheck(checkBoxDescending);
-            dataGridView.Rows.Clear();
         }
         private void clearItemGroup(Chart graph, Label label, CheckBox box)
         {
@@ -353,6 +369,17 @@ namespace sorting1
         {
             time = () => label.Text = (timer.ElapsedMilliseconds - iter * delay).ToString() + " мс";
             Invoke(time);
+        }
+        private void setDelay()
+        {
+            if (delayTextBox.Text != "")
+            {
+                delay = Convert.ToInt32(delayTextBox.Text);
+            }
+            else
+            {
+                delayTextBox.Text = delay.ToString();
+            }
         }
         #endregion
         #region sorting asc
@@ -450,7 +477,7 @@ namespace sorting1
             double iter = 0;
             quickSort(0, quickArray.Length - 1);
             timer.Stop();
-            showTime(quickSortLabel, timer, iter * 0.8);
+            showTime(quickSortLabel, timer, iter * 0.7);
 
             void quickSort(int minIndex, int maxIndex)
             {
@@ -609,7 +636,7 @@ namespace sorting1
             double iter = 0;
             quickSort(0, quickArray.Length - 1);
             timer.Stop();
-            showTime(quickSortLabel, timer, iter * 0.8);
+            showTime(quickSortLabel, timer, iter * (1 - 1/delay));
 
             void quickSort(int minIndex, int maxIndex)
             {
